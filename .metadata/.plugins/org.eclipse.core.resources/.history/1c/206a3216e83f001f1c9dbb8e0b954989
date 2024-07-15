@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript">
+</script>
+</head>
+<body>
+안녕하세요 도커에 복사된 html 입니다.
+<img src="images/img.jpg"/>
+</body>
+</html>

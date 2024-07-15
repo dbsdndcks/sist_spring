@@ -1,0 +1,207 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" info="다이닝 예약 step0" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- 헤드 영역 설정 -->
+    <!-- 생략된 부분은 위의 코드와 동일합니다. -->
+</head>
+<body>
+    <div class="wrapper">
+        <!--S header  -->
+        <jsp:include page="/WEB-INF/views/user/header.jsp"></jsp:include>
+        <!--E header  -->
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // 예비 데이터를 사용하여 예약 가능일 조회
+        fncSearchAvailTimesWeekly();
+    });
+
+    // 예약 가능 시간 데이터를 하드코딩
+    function fncAvailTimesWeekly(visitDateTime) {
+        return new Promise(function (resolve, reject) {
+            let data = {
+                result: {
+                    data: [
+                        {
+                            date: "2024-07-01",
+                            slots: [
+                                { availDateTime: "2024-07-01 12:00", isAvailable: true },
+                                { availDateTime: "2024-07-01 13:00", isAvailable: true },
+                                { availDateTime: "2024-07-01 18:00", isAvailable: false },
+                                { availDateTime: "2024-07-01 19:00", isAvailable: true }
+                            ]
+                        },
+                        {
+                            date: "2024-07-02",
+                            slots: [
+                                { availDateTime: "2024-07-02 12:00", isAvailable: true },
+                                { availDateTime: "2024-07-02 13:00", isAvailable: false },
+                                { availDateTime: "2024-07-02 18:00", isAvailable: true },
+                                { availDateTime: "2024-07-02 19:00", isAvailable: false }
+                            ]
+                        }
+                    ]
+                }
+            };
+            resolve(data);
+        });
+    }
+
+    // 나머지 함수들은 위의 코드와 동일합니다.
+    // 예약 시작 가능일 조회 화면
+    async function fncSearchAvailTimesWeekly() {
+        let availCheck = false;
+        let openDate = "";
+        let week = 0;
+        let maxWeek = 2;
+
+        function fncWeeklyDate(week) {
+            let date = new Date();
+            date.setDate(date.getDate()+(week*7));
+            let YY = date.getFullYear();
+            let mm = date.getMonth() >= 9 ? (date.getMonth()+1) : "0"+(date.getMonth()+1);
+            let dd = date.getDate() >= 10 ? date.getDate() : "0"+date.getDate();
+            let visitDateTime = YY+"-"+mm+"-"+dd;
+            return visitDateTime;
+        }
+
+        while (!availCheck) {
+            if (week == maxWeek) {
+                openDate = fncWeeklyDate(0);
+                break;
+            }
+
+            let visitDateTime = fncWeeklyDate(week);
+
+            let data = await fncAvailTimesWeekly(visitDateTime);
+
+            if (typeof data.result.data != 'undefined') {
+                let dateList = data.result.data;
+
+                for (let i = 0; i < dateList.length; i++) {
+                    let slots = dateList[i].slots;
+                    for (let j = 0; j < slots.length; j++) {
+                        let isAvailable = slots[j].isAvailable;
+                            if (isAvailable) {
+                                availCheck = true;
+                                break;
+                            }
+                    }
+                    if (availCheck) {
+                        openDate = dateList[i].date;
+                        break;
+                    }
+                }
+            }
+            week++;
+        }
+        openDate = openDate.replaceAll("-", ".");
+        commonJs.initResvCalendar(jQuery("#diningCal"), openDate);
+        await fncSearchAvailTimes();
+    }
+
+    // 나머지 함수들은 위의 코드와 동일합니다.
+</script>
+
+        <form id="form" name="form">
+            <input type="hidden" id="searchSysCode" name="searchSysCode" value='TWC'/>
+            <input type="hidden" id="diningCode" name="diningCode" value='003'/>
+            <input type="hidden" id="searchLangCode" name="searchLangCode" value=""/>
+            <input type="hidden" id="shopId" name="shopId" value="pQUWDMHkPf2II_uVDPCFFQ"/>
+            <input type="hidden" id="personCount" name="personCount" value=''/>
+            <input type="hidden" id="availSlotToken" name="availSlotToken" value=''/>
+            <input type="hidden" id="visitTime" name="visitTime" value=''/>
+            <input type="hidden" id="visitDate" name="visitDate" value=''/>
+            <input type="hidden" id="confirmReservationUseYn" name="confirmReservationUseYn" value=''/>
+
+            <div id="container" class="container">
+                <!-- 컨텐츠 S -->
+                <h1 class="hidden">날짜, 시간, 인원 선택</h1>
+                <!-- 예약-날짜 및 인원체크 -->
+                <div class="topArea">
+                    <div class="topInner">
+                        <h2 class="titDep1">Booking</h2>
+                        <p class="pageGuide">조선호텔앤리조트의 다이닝과 함께 차원이 다른 미식을 경험해 보세요.</p>
+                        <div class="stepWrap">
+                            <ol>
+                                <li class="on"><span class="hidden">현재단계</span><em>날짜, 시간, 인원 선택</em></li>
+                                <li><em>예약정보 상세</em></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="inner">
+                    <div class="diningContainer drDining_st02">
+                        <div class="chkValue"><span>웨스틴 조선 서울</span><span>ARIA</span></div>
+                        <div class="diningSelectCont calCont">
+                            <div class="lCont" id="calDiv">
+                                <div class="calContainer calSingle calInner" id="diningCal"></div>
+                            </div>
+                            <div class="rCont">
+                                <div class="tit">방문인원</div>
+                                <div class="intArea selectWrap" style="width:385px">
+                                    <select id="personCountSelect" data-height="150px" data-direction="down" aria-required="true" onchange="fncSearchAvailTimes();">
+                                        <option value="1">1명</option>
+                                        <option value="2" selected='selected'>2명</option>
+                                        <option value="3">3명</option>
+                                        <option value="4">4명</option>
+                                        <option value="5">5명</option>
+                                        <option value="6">6명</option>
+                                        <option value="7">7명</option>
+                                        <option value="8">8명</option>
+                                        <option value="9">9명</option>
+                                        <option value="10">10명</option>
+                                        <option value="callResve">11명 이상</option>
+                                    </select>
+                                </div>
+                                <div class="allTimeWrap" id="timeListDiv">
+                                    <div class="tit">시간 선택
+                                        <div class="allTimeSwitch">
+                                            <fieldset>
+                                                <label>
+                                                    <span>모든 시간 보기</span>
+                                                    <input role="switch" type="checkbox" id="allTimeSwitch" onchange="fncShowAllTimes();"/>
+                                                </label>
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                    <div class="timeWrap">
+                                        <strong class="timeTit">점심</strong>
+                                        <div class="timeSel morning">
+                                            <ul class="frmList" id="timeUlAm"></ul>
+                                        </div>
+                                        <strong class="timeTit">저녁</strong>
+                                        <div class="timeSel afternoon">
+                                            <ul class="frmList" id="timeUlPm"></ul>
+                                        </div>
+                                    </div>
+                                    <div class="groupPerson" id="groupPerson"></div>
+                                    <div class="timeGuideWrap">
+                                        <ul>
+                                            <li class="tg01">선택</li>
+                                            <li class="tg02">선택불가</li>
+                                            <li class="tg03">선택가능</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="selectInfoWrap" id="selectInfoWrap" style="display: none"></div>
+                        <div class="btnArea">
+                            <a href="javascript:void(0)" class="btnSC btnL" onclick="fncGoStep0();">이전</a>
+                            <a href="javascript:void(0)" class="btnSC btnL active" onclick="fncGoStep2();">다음</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <script type="text/javascript" src="/revolution/js/bw.lab.alphanumeric-1.0.js"></script>
+        <script type="text/javascript" src="/revolution/js/bw.lab.money-1.0.js"></script>
+    </div>
+</body>
+</html>

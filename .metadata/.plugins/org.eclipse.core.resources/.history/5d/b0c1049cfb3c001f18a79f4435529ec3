@@ -1,0 +1,427 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8" info="다이닝 예약 step0"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page import="java.util.Calendar, java.util.ArrayList, java.util.List"%>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>다이닝 - 다이닝 예약 | 엘리시안호텔</title>
+<link rel="shortcut icon" type="text/css" href="http://localhost/hotel_prj/static/home/images/ko/pc/common/favicon.ico">
+<link href="http://localhost/hotel_prj/static/home/css/ko/pc/common_josunhotel.css" rel="stylesheet" type="text/css">
+<link href="http://localhost/hotel_prj/static/home/css/ko/pc/contents.css" rel="stylesheet" type="text/css">
+<link href="http://localhost/hotel_prj/static/home/bluewaves/css/pc/contents.css" rel="stylesheet" type="text/css">
+<link href="http://localhost/hotel_prj/static/home/css/ko/pc/swiper.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubPlugin.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubCommon_contents.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubCommon_josunhotel.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/selectbox.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/swiper.min.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/home.js"></script>
+<script type="text/javascript" src="http://localhost/hotel_prj/static/home/bluewaves/js/pc/bw_contents.js"></script>
+<style type="text/css">
+.ui-state-default default .btnSC btnL .frmRadio .ui-selectmenu-button ui-selectmenu-button-closed ui-corner-all ui-button ui-widget {
+    cursor: pointer;
+}
+.selected-time {
+    background-color: #ffeb3b; /* 선택된 시간 슬롯 강조 */
+    border: 1px solid #fbc02d;
+}
+</style>
+<script>
+    function parseTime(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes; // 시간을 분으로 변환
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        return hours * 60 + minutes; // 현재 시간을 분으로 변환
+    }
+
+    function getCurrentDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}.${month}.${day}`;
+    }
+
+    function createTimeSlotSection(title, partSeat, timeSlots, requiredTables, ulId, inputIdPrefix, selectedDate) {
+        const currentTimeInMinutes = getCurrentTime();
+        const today = getCurrentDate();
+        let sectionHtml = '<strong class="timeTit">' + title + '</strong>';
+        sectionHtml += '<div class="timeSel ' + inputIdPrefix + '">';
+        sectionHtml += '<ul class="frmList" id="' + ulId + '">';
+
+        $.each(timeSlots, function(index, time) {
+            const timeInMinutes = parseTime(time);
+            const isDisabled = partSeat < requiredTables || (selectedDate === today && timeInMinutes < currentTimeInMinutes);
+            sectionHtml += '<li class="frmRadio" data-value="' + inputIdPrefix + '">';
+            sectionHtml += '<input type="radio" id="' + inputIdPrefix + index + '" name="frmRdo" data-ampm="am" ' + (isDisabled ? 'disabled="disabled"' : 'onclick="fncSelectTime(this);"') + '>';
+            sectionHtml += '<label for="' + inputIdPrefix + index + '">' + time + '</label>';
+            sectionHtml += '</li>';
+        });
+
+        sectionHtml += '</ul>';
+        sectionHtml += '</div>';
+
+        $(".timeWrap").append(sectionHtml);
+    }
+
+    function fncSelectTimeOnLoad(date) {
+        if (date === '') return; // 날짜가 빈 문자열인 경우 처리하지 않음
+
+        const table = $("#roomhall").text() == "ROOM" ? "AVAILABLE_ROOM_TABLE" : "AVAILABLE_HALL_TABLE";
+        const personCount = $("#personCountSelect").val();
+        const diningId = "${drVO.diningId}";
+
+        $.ajax({
+            type: 'POST',
+            url: "getTimeSlots.do",
+            async: true,
+            dataType: 'JSON',
+            data: {
+                "selectedDate": date,
+                "table": table,
+                "personCnt": personCount
+            },
+            success: function(response) {
+                console.log(response);
+                const partOneSeat = response.partSeatMap.partOneSeat;
+                const timeSlots1 = response.timeSlots1;
+                const partTwoSeat = response.partSeatMap.partTwoSeat;
+                const timeSlots2 = response.timeSlots2;
+                const partThreeSeat = response.partSeatMap.partThreeSeat;
+                const timeSlots3 = response.timeSlots3;
+                const requiredTables = response.requiredTables;
+
+                $(".timeWrap").empty();
+
+                // 1부 시간대 생성
+                createTimeSlotSection("1부 시간", partOneSeat, timeSlots1, requiredTables, "timeUlAm1", "timeOne", date);
+                // 2부 시간대 생성
+                createTimeSlotSection("2부 시간", partTwoSeat, timeSlots2, requiredTables, "timeUlAm2", "timeTwo", date);
+                // 3부 시간대 생성
+                createTimeSlotSection("3부 시간", partThreeSeat, timeSlots3, requiredTables, "timeUlAm3", "timeThree", date);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        const today = getCurrentDate();
+        fncSelectTimeOnLoad(today);
+
+        $("#diningCal").datepicker({
+            minDate: 0,
+            maxDate: "+30D",
+            onSelect: function(dateText) {
+                fncSelectTimeOnLoad(dateText);
+            }
+        });
+    });
+
+    function fncSelectTime(timeHtml) {
+        const date = $("#diningCal").val();
+        const week = ['일', '월', '화', '수', '목', '금', '토'];
+        const day = week[new Date(date.replaceAll('.', '/')).getDay()];
+        const time = $(timeHtml).next().html();
+        const visitTime = $.trim(time);
+        const visitDate = date + "(" + day + ")";
+
+        selectedTime = visitTime;  //방문시간
+        const partValue = $(timeHtml).closest('li').data('value'); // 1부, 2부, 3부인지
+
+        let selectedPart;
+        if (partValue === 'timeOne') {
+            selectedPart = 1;
+        } else if (partValue === 'timeTwo') {
+            selectedPart = 2;
+        } else if (partValue === 'timeThree') {
+            selectedPart = 3;
+        }
+
+        const table = $("#roomhall").text() == "ROOM" ? "AVAILABLE_ROOM_TABLE" : "AVAILABLE_HALL_TABLE";
+        const personCount = $("#personCountSelect").val();
+        const diningId = "${drVO.diningId}";
+
+        const personCnt = ("방문인원 총 " + personCount + "명");
+
+        // visitTime과 visitDate 설정
+        $("#visitTimeSpan").text(visitTime);
+        $("#visitDateSpan").text(visitDate);
+        $("#personCountSpan").text(personCnt);
+
+        // hidden에 값넣기
+        $("#diningId").val(diningId);
+        $("#visitPeople").val(personCount);
+        $("#visitTime").val(visitTime);
+        $("#visitDate").val(date);
+        $("#diningTime").val(selectedPart);
+
+        // selectInfoWrap 표시
+        $("#selectInfoWrap").show();
+    }
+
+    function ShowRoomHallTimes() {
+        let table;
+        if ($("#roomhall").text() == "ROOM") {
+            $("#roomhall").text("HALL");
+            table = "AVAILABLE_HALL_TABLE";
+        } else if ($("#roomhall").text() == "HALL") {
+            $("#roomhall").text("ROOM");
+            table = "AVAILABLE_ROOM_TABLE";
+        }
+        const selectedDate = $("#diningCal").val();
+        const personCnt = $("#personCountSelect").val();
+        const diningId = "${drVO.diningId}";
+        $.ajax({
+            type: 'POST',
+            url: "getTimeSlots.do",
+            async: true,
+            dataType: 'JSON',
+            data: {
+                "diningId": diningId,
+                "selectedDate": selectedDate,
+                "table": table,
+                "personCnt": personCnt
+            },
+            success: function(response) {
+                console.log(response);
+                const partOneSeat = response.partSeatMap.partOneSeat;
+                const timeSlots1 = response.timeSlots1;
+                const partTwoSeat = response.partSeatMap.partTwoSeat;
+                const timeSlots2 = response.timeSlots2;
+                const partThreeSeat = response.partSeatMap.partThreeSeat;
+                const timeSlots3 = response.timeSlots3;
+                const requiredTables = response.requiredTables;
+
+                $(".timeWrap").empty();
+
+                // 1부 시간대 생성
+                createTimeSlotSection("1부 시간", partOneSeat, timeSlots1, requiredTables, "timeUlAm1", "timeOne", selectedDate);
+                // 2부 시간대 생성
+                createTimeSlotSection("2부 시간", partTwoSeat, timeSlots2, requiredTables, "timeUlAm2", "timeTwo", selectedDate);
+                // 3부 시간대 생성
+                createTimeSlotSection("3부 시간", partThreeSeat, timeSlots3, requiredTables, "timeUlAm3", "timeThree", selectedDate);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    }
+
+    async function fncGoStep2() {
+        // 방문 시간 선택이 되었는지 확인
+        if ($("#visitTimeSpan").text().trim() === '') {
+            alert("시간을 선택해주세요");
+            return;  // 시간 선택이 안된 경우 함수를 종료합니다.
+        }
+
+        if ($("#selectInfoWrap").is(':visible')) {
+            $("#form").attr("action", "dining_step1.do");
+            $("#form").attr("method", "post");
+            $("#form").submit();
+        } else {
+            alert("시간을 선택해주세요");
+        }
+    }
+
+    function fncGoStep0() {
+        location.href = "http://localhost/hotel_prj/user/dining.do";
+    }
+</script>
+</head>
+<body>
+    <div class="wrapper">
+        <!--S header  -->
+        <jsp:include page="/WEB-INF/views/user/header.jsp"></jsp:include>
+        <!--E header  -->
+        <form id="form" name="form">
+            <input type="hidden" id="visitPeople" name="visitPeople" value="" />
+            <input type="hidden" id="visitTime" name="visitTime" value="" />
+            <input type="hidden" id="visitDate" name="visitDate" value="" />
+            <input type="hidden" id="diningTime" name="diningTime" value="" />
+            <div id="container" class="container">
+                <!-- 컨텐츠 S -->
+                <h1 class="hidden">날짜, 시간, 인원 선택</h1>
+                <!-- 예약-날짜 및 인원체크 -->
+                <div class="topArea">
+                    <div class="topInner">
+                        <h2 class="titDep1">Booking</h2>
+                        <p class="pageGuide">엘리시안의 다이닝과 함께 차원이 다른 미식을 경험해 보세요.</p>
+                        <!-- 조선호텔앤리조트의 다이닝과 함께 차원이 다른 미식을 경험해 보세요. -->
+                        <div class="stepWrap">
+                            <ol>
+                                <li class="on"><span class="hidden">현재단계</span><em>날짜, 시간, 인원 선택</em></li>
+                                <!-- 날짜, 시간, 인원 선택 -->
+                                <li><em>예약정보 상세</em></li>
+                                <!-- 예약정보 상세 -->
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <!-- //topArea -->
+                <div class="inner">
+                    <div class="diningContainer drDining_st02">
+                        <div class="chkValue">
+                            <span>엘리시안 호텔</span><span id="diningName"></span>
+                        </div>
+                        <div class="diningSelectCont calCont">
+                            <div class="lCont" id="calDiv">
+                                <!-- 달력 한개 짜리 -->
+                                <div class="calContainer calSingle calInner" id="diningCal"></div>
+                                <!-- //달력 한개 짜리 -->
+                            </div>
+                            <div class="rCont">
+                                <div class="tit">방문인원</div>
+                                <!-- 방문인원 -->
+                                <div class="intArea selectWrap" style="width: 385px">
+                                    <select id="personCountSelect" data-height="150px" data-direction="down" aria-required="true" onchange="fncSelectTime()">
+                                        <option value="1">1명</option>
+                                        <option value="2" selected='selected'>2명</option>
+                                        <option value="3">3명</option>
+                                        <option value="4">4명</option>
+                                        <option value="5">5명</option>
+                                        <option value="6">6명</option>
+                                        <option value="7">7명</option>
+                                        <option value="8">8명</option>
+                                        <option value="9">9명</option>
+                                        <option value="10">10명</option>
+                                    </select>
+                                    <div style="font-size: 15px; opacity: 0.5">
+                                        *11명 이상의 예약은 호텔 측으로 연락 부탁드립니다.
+                                    </div>
+                                </div>
+                                <div class="allTimeSwitch">
+                                    <fieldset>
+                                        <label> <span id="roomhall">HALL</span>
+                                        <!-- 모든 시간 보기 --> <input role="switch" type="checkbox" id="seatsSwitch" onchange="ShowRoomHallTimes();">
+                                        </label>
+                                    </fieldset>
+                                </div>
+                                <div class="allTimeWrap" id="timeListDiv">
+                                    <div class="tit">
+                                        시간 선택
+                                        <div class="allTimeSwitch"></div>
+                                    </div>
+                                    <div class="timeWrap">
+                                        <strong class="timeTit">1부 시간</strong>
+                                        <div class="timeSel timeOne">
+                                            <ul class="frmList" id="timeUlAm1">
+                                                <c:set var="partOneSeat" value="${diningSeatsData.partSeatMap.partOneSeat}" />
+                                                <c:forEach var="time" items="${diningSeatsData.timeSlots1}" varStatus="i">
+                                                    <li class="frmRadio" data-value="timeOne">
+                                                        <c:choose>
+                                                            <c:when test="${partOneSeat < diningSeatsData.requiredTables}">
+                                                                <input type="radio" id="timeOne${i.index}" name="frmRdo" disabled="disabled">
+                                                                <label for="timeOne${i.index}"><c:out value="${time}" /></label>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <input type="radio" id="timeOne${i.index}" name="frmRdo" onclick="fncSelectTime(this);">
+                                                                <label for="timeOne${i.index}"><c:out value="${time}" /></label>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </li>
+                                                </c:forEach>
+                                            </ul>
+                                        </div>
+                                        <strong class="timeTit">2부 시간</strong>
+                                        <div class="timeSel timeTwo">
+                                            <ul class="frmList" id="timeUlAm2">
+                                                <c:set var="partTwoSeat" value="${diningSeatsData.partSeatMap.partTwoSeat}" />
+                                                <c:forEach var="time" items="${diningSeatsData.timeSlots2}" varStatus="i">
+                                                    <li class="frmRadio" data-value="timeTwo">
+                                                        <c:choose>
+                                                            <c:when test="${partTwoSeat < diningSeatsData.requiredTables}">
+                                                                <input type="radio" id="timeTwo${i.index}" name="frmRdo" disabled="disabled">
+                                                                <label for="timeTwo${i.index}"><c:out value="${time}" /></label>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <input type="radio" id="timeTwo${i.index}" name="frmRdo" onclick="fncSelectTime(this);">
+                                                                <label for="timeTwo${i.index}"><c:out value="${time}" /></label>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </li>
+                                                </c:forEach>
+                                            </ul>
+                                        </div>
+                                        <strong class="timeTit">3부 시간</strong>
+                                        <div class="timeSel timeThree">
+                                            <ul class="frmList" id="timeUlAm3">
+                                                <c:set var="partThreeSeat" value="${diningSeatsData.partSeatMap.partThreeSeat}" />
+                                                <c:forEach var="time" items="${diningSeatsData.timeSlots3}" varStatus="i">
+                                                    <li class="frmRadio" data-value="timeThree">
+                                                        <c:choose>
+                                                            <c:when test="${partThreeSeat < diningSeatsData.requiredTables}">
+                                                                <input type="radio" id="timeThree${i.index}" name="frmRdo" disabled="disabled">
+                                                                <label for="timeThree${i.index}"><c:out value="${time}" /></label>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <input type="radio" id="timeThree${i.index}" name="frmRdo" onclick="fncSelectTime(this);">
+                                                                <label for="timeThree${i.index}"><c:out value="${time}" /></label>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </li>
+                                                </c:forEach>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- // rCont -->
+                        </div>
+                        <div class="selectInfoWrap" id="selectInfoWrap" style="display: none;">
+                            <p class="tit">예약 정보</p>
+                            <!-- 예약 정보 -->
+                            <div class="colorBox">
+                                <div class="selectInfo">
+                                    <div>
+                                        <p>날짜</p>
+                                        <!-- 날짜 -->
+                                        <em><span id="visitDateSpan"></span></em>
+                                    </div>
+                                    <div>
+                                        <p>시간</p>
+                                        <!-- 시간 -->
+                                        <em id="visitTimeSpan"></em>
+                                    </div>
+                                    <div>
+                                        <p>인원수</p>
+                                        <!-- 인원수 -->
+                                        <em id="personCountSpan"></em>
+                                    </div>
+                                </div>
+                                <div class="manualInfoWrap" id="manualInfoWrap"></div>
+                            </div>
+                        </div>
+                        <div class="btnArea">
+                            <a href="javascript:void(0)" class="btnSC btnL" onclick="fncGoStep0();">이전</a>
+                            <!-- 이전 -->
+                            <a href="javascript:void(0)" class="btnSC btnL active" onclick="fncGoStep2();">다음</a>
+                            <!-- 다음 -->
+                        </div>
+                    </div>
+                </div>
+                <!-- //inner -->
+                <!-- 컨텐츠 E -->
+            </div>
+            <!-- //container -->
+        </form>
+        <!-- footer S -->
+        <jsp:include page="/WEB-INF/views/user/footer.jsp"></jsp:include>
+        <!-- footer E -->
+    </div>
+    <!-- //wrapper -->
+</body>
+</html>

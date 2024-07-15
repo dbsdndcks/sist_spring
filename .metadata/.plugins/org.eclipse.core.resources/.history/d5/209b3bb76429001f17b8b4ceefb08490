@@ -1,0 +1,190 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" info="다이닝 예약 step0" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>다이닝 - 다이닝 예약 | 엘리시안호텔</title>
+    <link rel="shortcut icon" type="text/css" href="http://localhost/hotel_prj/static/home/images/ko/pc/common/favicon.ico">
+    <link href="http://localhost/hotel_prj/static/home/css/ko/pc/common_josunhotel.css" rel="stylesheet" type="text/css">
+    <link href="http://localhost/hotel_prj/static/home/css/ko/pc/contents.css" rel="stylesheet" type="text/css">
+    <link href="http://localhost/hotel_prj/static/home/bluewaves/css/pc/contents.css" rel="stylesheet" type="text/css">
+    <link href="http://localhost/hotel_prj/static/home/css/ko/pc/swiper.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubPlugin.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubCommon_contents.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/pubCommon_josunhotel.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/selectbox.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/ko/pc/swiper.min.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/js/home.js"></script>
+    <script type="text/javascript" src="http://localhost/hotel_prj/static/home/bluewaves/js/pc/bw_contents.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.ko.min.js" integrity="sha512-L4qpL1ZotXZLLe8Oo0ZyHrj/SweV7CieswUODAAPN/tnqN3PA1P+4qPu5vIryNor6HQ5o22NujIcAZIfyVXwbQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // 헤더 메뉴 버튼 클릭 이벤트
+        jQuery(document).on("click", ".headArea .btnMenu", function() {
+            // 메뉴 펼쳐질 때 라운지 리스트 3가지 무작위 노출
+            if (jQuery(this).hasClass("menuOn")) {
+                var expsrCount = 3;
+                var $loungeList = jQuery(".menuDepth-add .gnb-thum li");
+                var randomArray = generateRandomNumberArray(expsrCount, $loungeList.length);
+
+                $loungeList.addClass("hidden");
+                $loungeList.each(function(index) {
+                    if (randomArray.indexOf(index) > -1) {
+                        jQuery(this).removeClass("hidden");
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="wrapper">
+        <!--S header  -->
+        <jsp:include page="/WEB-INF/views/user/header.jsp"></jsp:include>
+        <!--E header  -->
+
+
+
+        <form id="form" name="form">
+            <input type="hidden" id="searchSysCode" name="searchSysCode" value='TWC'/>
+            <input type="hidden" id="diningCode" name="diningCode" value='003'/>
+            <input type="hidden" id="searchLangCode" name="searchLangCode" value=""/>
+            <input type="hidden" id="shopId" name="shopId" value="pQUWDMHkPf2II_uVDPCFFQ"/>
+            <input type="hidden" id="personCount" name="personCount" value=''/>
+            <input type="hidden" id="availSlotToken" name="availSlotToken" value=''/>
+            <input type="hidden" id="visitTime" name="visitTime" value=''/>
+            <input type="hidden" id="visitDate" name="visitDate" value=''/>
+            <input type="hidden" id="confirmReservationUseYn" name="confirmReservationUseYn" value=''/>
+
+            <div id="container" class="container">
+                <!-- 컨텐츠 S -->
+                <h1 class="hidden">날짜, 시간, 인원 선택</h1>
+                <!-- 예약-날짜 및 인원체크 -->
+                <div class="topArea">
+                    <div class="topInner">
+                        <h2 class="titDep1">Booking</h2>
+                        <p class="pageGuide">조선호텔앤리조트의 다이닝과 함께 차원이 다른 미식을 경험해 보세요.</p>
+                        <!-- 조선호텔앤리조트의 다이닝과 함께 차원이 다른 미식을 경험해 보세요. -->
+                        <div class="stepWrap">
+                            <ol>
+                                <li class="on"><span class="hidden">현재단계</span><em>날짜, 시간, 인원 선택</em></li>
+                                <!-- 날짜, 시간, 인원 선택 -->
+                                <li><em>예약정보 상세</em></li>
+                                <!-- 예약정보 상세 -->
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- //topArea -->
+                <div class="inner">
+                    <div class="diningContainer drDining_st02">
+                        <div class="chkValue"><span>웨스틴 조선 서울<!--  그랜드 조선 부산 --></span><span>ARIA <!-- The Ninth Gate --></span></div>
+                        <div class="diningSelectCont calCont">
+                            <div class="lCont" id="calDiv">
+                                <!-- 달력 한개 짜리 -->
+                                <div class="calContainer calSingle calInner" id="diningCal"></div>
+                                <!-- //달력 한개 짜리 -->
+                            </div>
+                            <div class="rCont">
+                                <div class="tit">방문인원</div>
+                                <!-- 방문인원 -->
+                                <div class="intArea selectWrap" style="width:385px">
+                                    <select id="personCountSelect" data-height="150px" data-direction="down" aria-required="true" onchange="fncSearchAvailTimes();">
+                                        <option value="1">1명</option>
+                                        <!-- 명 -->
+                                        <option value="2" selected='selected'>2명</option>
+                                        <!-- 명 -->
+                                        <option value="3">3명</option>
+                                        <!-- 명 -->
+                                        <option value="4">4명</option>
+                                        <!-- 명 -->
+                                        <option value="5">5명</option>
+                                        <!-- 명 -->
+                                        <option value="6">6명</option>
+                                        <!-- 명 -->
+                                        <option value="7">7명</option>
+                                        <!-- 명 -->
+                                        <option value="8">8명</option>
+                                        <!-- 명 -->
+                                        <option value="9">9명</option>
+                                        <!-- 명 -->
+                                        <option value="10">10명</option>
+                                        <!-- 명 -->
+                                        <option value="callResve">11명 이상</option>
+                                        <!-- 11명 이상 -->
+                                    </select>
+                                </div>
+                                <div class="allTimeWrap" id="timeListDiv">
+                                    <!-- 221130 allTimeWrap 클래스추가 : 날짜 인원 선택후 나옴 -->
+                                    <div class="tit">시간 선택
+                                        <!-- 시간 선택 -->
+                                        <div class="allTimeSwitch">
+                                            <fieldset>
+                                                <label>
+                                                    <span>모든 시간 보기</span>
+                                                    <!-- 모든 시간 보기 -->
+                                                    <input role="switch" type="checkbox" id="allTimeSwitch" onchange="fncShowAllTimes();"/>
+                                                </label>
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                    <div class="timeWrap">
+                                        <!-- 221221 div 넣음 / 단체일때 display:none  -->
+                                        <strong class="timeTit">점심</strong>
+                                        <!-- 점심 -->
+                                        <div class="timeSel morning">
+                                            <!--  221206 class추가 -->
+                                            <ul class="frmList" id="timeUlAm"></ul>
+                                        </div>
+                                        <strong class="timeTit">저녁</strong>
+                                        <!-- 저녁 -->
+                                        <div class="timeSel afternoon">
+                                            <!--  221206 class추가 -->
+                                            <ul class="frmList" id="timeUlPm"></ul>
+                                        </div>
+                                    </div>
+                                    <!-- 221221 단체일때 보여짐 -->
+                                    <div class="groupPerson" id="groupPerson"></div>
+                                    <div class="timeGuideWrap">
+                                        <ul>
+                                            <li class="tg01">선택</li>
+                                            <!-- 선택 -->
+                                            <li class="tg02">선택불가</li>
+                                            <!-- 선택불가 -->
+                                            <li class="tg03">선택가능</li>
+                                            <!-- 선택가능 -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- // rCont -->
+                        </div>
+
+                        <!-- 선택힌 예약 정보 -->
+                        <div class="selectInfoWrap" id="selectInfoWrap" style="display: none"></div>
+                        <!-- // 선택힌 예약 정보 -->
+                        <div class="btnArea">
+                            <a href="javascript:void(0)" class="btnSC btnL" onclick="fncGoStep0();">이전</a>
+                            <!-- 이전 -->
+                            <a href="javascript:void(0)" class="btnSC btnL active" onclick="fncGoStep2();">다음</a>
+                            <!-- 다음 -->
+                        </div>
+                    </div>
+                </div>
+                <!-- //inner -->
+                <!-- 컨텐츠 E -->
+            </div>
+            <!-- //container -->
+        </form>
+        <script type="text/javascript" src="/revolution/js/bw.lab.alphanumeric-1.0.js"></script>
+        <script type="text/javascript" src="/revolution/js/bw.lab.money-1.0.js"></script>
+    </div>
+    <!-- //wrapper -->
+</body>
+</html>
